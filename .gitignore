@@ -3,6 +3,7 @@
 .packages
 packages
 pubspec.lock
+.idea
 
 # Directory created by dartdoc
 doc/api/
