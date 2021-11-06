@@ -4,7 +4,7 @@
 
 import 'dart:async';
 
-import 'package:observable/observable.dart';
+import 'package:change_notifier/change_notifier.dart';
 import 'package:test/test.dart';
 
 import 'observable_test_utils.dart';
@@ -12,18 +12,19 @@ import 'observable_test_utils.dart';
 void main() {
   // TODO(jmesserly): need all standard Map API tests.
 
-  StreamSubscription? sub;
+  StreamSubscription<Object>? sub;
 
   tearDown(() {
     sub?.cancel();
   });
 
   group('observe length', () {
-    late ObservableMap map;
+    late ObservableMap<String, int?> map;
     List<ChangeRecord>? changes;
 
     setUp(() {
-      map = toObservable({'a': 1, 'b': 2, 'c': 3});
+      map =
+          toObservable({'a': 1, 'b': 2, 'c': 3}) as ObservableMap<String, int?>;
       changes = null;
       sub = map.changes.listen((records) {
         changes = getPropertyChangeRecords(records, #length);
@@ -47,8 +48,9 @@ void main() {
     });
 
     test('remove changes length', () {
-      map.remove('c');
-      map.remove('a');
+      map
+        ..remove('c')
+        ..remove('a');
       expect(map, {'b': 2});
       return Future(() {
         expect(
@@ -72,13 +74,13 @@ void main() {
       map['c'] = 9000;
       expect(map, {'a': 1, 'b': 2, 'c': 9000});
       return Future(() {
-        expect(changes, []);
+        expect(changes, <Object>[]);
       });
     });
 
     test('clear changes length', () {
       map.clear();
-      expect(map, {});
+      expect(map, <dynamic, dynamic>{});
       return Future(() {
         expect(changes, changeMatchers([_lengthChange(map, 3, 0)]));
       });
@@ -86,15 +88,18 @@ void main() {
   });
 
   group('observe item', () {
-    late ObservableMap map;
-    List<ChangeRecord>? changes;
+    late ObservableMap<String, int?> map;
+    List<MapChangeRecord<String, int?>>? changes;
 
     setUp(() {
-      map = toObservable(<String, int?>{'a': 1, 'b': 2, 'c': 3});
+      map = toObservable(<String, int?>{'a': 1, 'b': 2, 'c': 3})
+          as ObservableMap<String, int?>;
       changes = null;
       sub = map.changes.listen((records) {
-        changes =
-            records.where((r) => r is MapChangeRecord && r.key == 'b').toList();
+        changes = records
+            .whereType<MapChangeRecord<String, int?>>()
+            .where((r) => r.key == 'b')
+            .toList();
       });
     });
 
@@ -102,7 +107,7 @@ void main() {
       map.putIfAbsent('d', () => 4);
       expect(map, {'a': 1, 'b': 2, 'c': 3, 'd': 4});
       return Future(() {
-        expect(changes, []);
+        expect(changes, <Object>[]);
       });
     });
 
@@ -134,7 +139,7 @@ void main() {
       map['c'] = 9000;
       expect(map, {'a': 1, 'b': 2, 'c': 9000});
       return Future(() {
-        expect(changes, []);
+        expect(changes, <Object>[]);
       });
     });
 
@@ -154,7 +159,7 @@ void main() {
       map.remove('a');
       expect(map, {'b': 2, 'c': 3});
       return Future(() {
-        expect(changes, []);
+        expect(changes, <Object>[]);
       });
     });
 
@@ -180,17 +185,18 @@ void main() {
   });
 
   test('toString', () {
-    var map = toObservable({'a': 1, 'b': 2});
+    final map = toObservable({'a': 1, 'b': 2}) as ObservableMap<String, int?>;
     expect(map.toString(), '{a: 1, b: 2}');
   });
 
   group('observe keys/values', () {
-    late ObservableMap map;
+    late ObservableMap<String, int?> map;
     late int keysChanged;
     late int valuesChanged;
 
     setUp(() {
-      map = toObservable({'a': 1, 'b': 2, 'c': 3});
+      map =
+          toObservable({'a': 1, 'b': 2, 'c': 3}) as ObservableMap<String, int?>;
       keysChanged = 0;
       valuesChanged = 0;
       sub = map.changes.listen((records) {
@@ -218,8 +224,9 @@ void main() {
     });
 
     test('remove changes keys/values', () {
-      map.remove('c');
-      map.remove('a');
+      map
+        ..remove('c')
+        ..remove('a');
       expect(map, {'b': 2});
       return Future(() {
         expect(keysChanged, 2);
@@ -247,7 +254,7 @@ void main() {
 
     test('clear changes keys/values', () {
       map.clear();
-      expect(map, {});
+      expect(map, <String, int>{});
       return Future(() {
         expect(keysChanged, 1);
         expect(valuesChanged, 1);
@@ -257,10 +264,10 @@ void main() {
 
   group('change records', () {
     List<ChangeRecord>? records;
-    late ObservableMap map;
+    late ObservableMap<String, int?> map;
 
     setUp(() {
-      map = toObservable({'a': 1, 'b': 2});
+      map = toObservable({'a': 1, 'b': 2}) as ObservableMap<String, int?>;
       records = null;
       map.changes.first.then((r) => records = r);
     });
@@ -274,7 +281,7 @@ void main() {
       expect(map.containsKey('b'), true);
       expect(map.keys.toList(), ['a', 'b']);
       expect(map.values.toList(), [1, 2]);
-      var copy = {};
+      var copy = <String, int?>{};
       map.forEach((k, v) => copy[k] = v);
       expect(copy, {'a': 1, 'b': 2});
       return Future(() {
@@ -344,7 +351,7 @@ void main() {
 
     test('clear', () {
       map.clear();
-      expect(map, {});
+      expect(map, <String, int>{});
 
       return Future(() {
         expect(
@@ -361,8 +368,8 @@ void main() {
   });
 
   group('Updates delegate as a spy', () {
-    late Map delegate;
-    late ObservableMap map;
+    late Map<String, int> delegate;
+    late ObservableMap<String, int?> map;
 
     setUp(() {
       delegate = {};
@@ -376,17 +383,19 @@ void main() {
   });
 }
 
-PropertyChangeRecord<int> _lengthChange(map, int oldValue, int newValue) =>
-    PropertyChangeRecord<int>(map, #length, oldValue, newValue);
+PropertyChangeRecord<int, Symbol> _lengthChange(
+        Map<String, int?> map, int oldValue, int newValue) =>
+    PropertyChangeRecord(map, #length, oldValue, newValue);
 
-MapChangeRecord _changeKey(key, old, newValue) =>
-    MapChangeRecord<String, int?>(key, old, newValue);
+MapChangeRecord<K, V?> _changeKey<K, V>(K key, V old, V newValue) =>
+    MapChangeRecord(key, old, newValue);
 
-ChangeRecord _insertKey(key, newValue) =>
-    MapChangeRecord<String, int?>.insert(key, newValue);
+MapChangeRecord<K, V?> _insertKey<K, V>(K key, V? newValue) =>
+    MapChangeRecord.insert(key, newValue);
 
-ChangeRecord _removeKey(key, oldValue) =>
-    MapChangeRecord<String, int?>.remove(key, oldValue);
+MapChangeRecord<K, V?> _removeKey<K, V>(K key, V? oldValue) =>
+    MapChangeRecord.remove(key, oldValue);
 
-PropertyChangeRecord<Null> _propChange(map, prop) =>
-    PropertyChangeRecord<Null>(map, prop, null, null);
+PropertyChangeRecord<Object?, Symbol> _propChange(
+        Map<String, int?> map, Symbol prop) =>
+    PropertyChangeRecord(map, prop, null, null);

@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:observable/observable.dart';
+import 'package:change_notifier/change_notifier.dart';
 import 'package:test/test.dart';
 
 import 'observable_test_utils.dart';
@@ -29,11 +29,11 @@ void main() {
     });
   });
 
-  group(ChangeNotifier, () {
+  group(AsyncChangeNotifier, () {
     Future<void> runTest<T extends ChangeRecord>(
-        FutureOr<void> Function(ChangeNotifier<T> cn) runFn,
+        FutureOr<void> Function(AsyncChangeNotifier<T> cn) runFn,
         FutureOr<void> Function(List<T> cr) testFn) async {
-      final cn = ChangeNotifier<T>();
+      final cn = AsyncChangeNotifier<T>();
 
       cn.changes.listen((value) {
         expect(value, TypeMatcher<ChangeRecords<T>>());

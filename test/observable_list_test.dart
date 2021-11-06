@@ -4,7 +4,7 @@
 
 import 'dart:async';
 
-import 'package:observable/observable.dart';
+import 'package:change_notifier/change_notifier.dart';
 import 'package:test/test.dart';
 
 import 'observable_test_utils.dart';
@@ -12,7 +12,7 @@ import 'observable_test_utils.dart';
 void main() {
   // TODO(jmesserly): need all standard List API tests.
 
-  StreamSubscription? sub, sub2;
+  StreamSubscription<Object>? sub, sub2;
 
   tearDown(() {
     sub?.cancel();
@@ -40,7 +40,7 @@ void main() {
 
     test('removeObject changes length', () {
       list.remove(2);
-      expect(list, orderedEquals([1, 3]));
+      expect(list, orderedEquals(<int>[1, 3]));
 
       return Future(() {
         expect(changes, changeMatchers([_lengthChange(3, 2)]));
@@ -48,8 +48,9 @@ void main() {
     });
 
     test('removeRange changes length', () {
-      list.add(4);
-      list.removeRange(1, 3);
+      list
+        ..add(4)
+        ..removeRange(1, 3);
       expect(list, [1, 4]);
       return Future(() {
         expect(changes,
@@ -58,8 +59,9 @@ void main() {
     });
 
     test('removeWhere changes length', () {
-      list.add(2);
-      list.removeWhere((e) => e == 2);
+      list
+        ..add(2)
+        ..removeWhere((e) => e == 2);
       expect(list, [1, 3]);
       return Future(() {
         expect(changes,
@@ -85,7 +87,7 @@ void main() {
 
     test('clear changes length', () {
       list.clear();
-      expect(list, []);
+      expect(list, <Object>[]);
       return Future(() {
         expect(changes, changeMatchers([_lengthChange(3, 0)]));
       });
@@ -93,12 +95,12 @@ void main() {
   });
 
   group('observe index', () {
-    List<ListChangeRecord>? changes;
+    List<ListChangeRecord<int?>>? changes;
 
     setUp(() {
       list = toObservableList([1, 2, 3]);
       changes = null;
-      sub = list.listChanges.listen((List<ListChangeRecord> records) {
+      sub = list.listChanges.listen((List<ListChangeRecord<int?>> records) {
         changes = getListChangeRecords(records, 1);
       });
     });
@@ -107,7 +109,7 @@ void main() {
       list.add(4);
       expect(list, [1, 2, 3, 4]);
       return Future(() {
-        expect(changes, []);
+        expect(changes, <Object>[]);
       });
     });
 
@@ -116,7 +118,7 @@ void main() {
       expect(list, [1, 777, 3]);
       return Future(() {
         expect(changes, [
-          _change(1, addedCount: 1, removed: [2])
+          _change(1, addedCount: 1, removed: <int>[2])
         ]);
       });
     });
@@ -125,7 +127,7 @@ void main() {
       list[2] = 9000;
       expect(list, [1, 2, 9000]);
       return Future(() {
-        expect(changes, []);
+        expect(changes, <Object>[]);
       });
     });
 
@@ -144,7 +146,7 @@ void main() {
       list.length = 2;
       expect(list, [1, 2]);
       return Future(() {
-        expect(changes, []);
+        expect(changes, <Object>[]);
       });
     });
 
@@ -174,7 +176,7 @@ void main() {
       list.add(2);
       expect(list, [1, 2]);
       return Future(() {
-        expect(changes, []);
+        expect(changes, <Object>[]);
       });
     });
   });
@@ -186,7 +188,7 @@ void main() {
 
   group('change records', () {
     List<ChangeRecord>? propRecords;
-    List<ListChangeRecord>? listRecords;
+    List<ListChangeRecord<int?>>? listRecords;
 
     setUp(() {
       list = toObservableList([1, 2, 3, 1, 3, 4]);
@@ -206,7 +208,7 @@ void main() {
       expect(list.last, 4);
       var copy = <int?>[];
       list.forEach(copy.add);
-      expect(copy, orderedEquals([1, 2, 3, 1, 3, 4]));
+      expect(copy, orderedEquals(<int>[1, 2, 3, 1, 3, 4]));
       return Future(() {
         // no change from read-only operators
         expect(propRecords, null);
@@ -215,9 +217,10 @@ void main() {
     });
 
     test('add', () {
-      list.add(5);
-      list.add(6);
-      expect(list, orderedEquals([1, 2, 3, 1, 3, 4, 5, 6]));
+      list
+        ..add(5)
+        ..add(6);
+      expect(list, orderedEquals(<int>[1, 2, 3, 1, 3, 4, 5, 6]));
 
       return Future(() {
         expect(
@@ -232,62 +235,62 @@ void main() {
 
     test('[]=', () {
       list[1] = list.last;
-      expect(list, orderedEquals([1, 4, 3, 1, 3, 4]));
+      expect(list, orderedEquals(<int>[1, 4, 3, 1, 3, 4]));
 
       return Future(() {
         expect(propRecords, null);
         expect(listRecords, [
-          _change(1, addedCount: 1, removed: [2])
+          _change(1, addedCount: 1, removed: <int>[2])
         ]);
       });
     });
 
     test('removeLast', () {
       expect(list.removeLast(), 4);
-      expect(list, orderedEquals([1, 2, 3, 1, 3]));
+      expect(list, orderedEquals(<int>[1, 2, 3, 1, 3]));
 
       return Future(() {
         expect(propRecords, changeMatchers([_lengthChange(6, 5)]));
         expect(listRecords, [
-          _change(5, removed: [4])
+          _change(5, removed: <int>[4])
         ]);
       });
     });
 
     test('removeRange', () {
       list.removeRange(1, 4);
-      expect(list, orderedEquals([1, 3, 4]));
+      expect(list, orderedEquals(<int>[1, 3, 4]));
 
       return Future(() {
         expect(propRecords, changeMatchers([_lengthChange(6, 3)]));
         expect(listRecords, [
-          _change(1, removed: [2, 3, 1])
+          _change(1, removed: <int>[2, 3, 1])
         ]);
       });
     });
 
     test('removeWhere', () {
       list.removeWhere((e) => e == 3);
-      expect(list, orderedEquals([1, 2, 1, 4]));
+      expect(list, orderedEquals(<int>[1, 2, 1, 4]));
 
       return Future(() {
         expect(propRecords, changeMatchers([_lengthChange(6, 4)]));
         expect(listRecords, [
-          _change(2, removed: [3]),
-          _change(3, removed: [3])
+          _change(2, removed: <int>[3]),
+          _change(3, removed: <int>[3])
         ]);
       });
     });
 
     test('sort', () {
       list.sort((x, y) => x! - y!);
-      expect(list, orderedEquals([1, 1, 2, 3, 3, 4]));
+      expect(list, orderedEquals(<int>[1, 1, 2, 3, 3, 4]));
 
       return Future(() {
         expect(propRecords, null);
         expect(listRecords, [
           _change(1, addedCount: 1),
-          _change(4, removed: [1])
+          _change(4, removed: <int>[1])
         ]);
       });
     });
@@ -295,8 +298,9 @@ void main() {
     test('sort of 2 elements', () {
       var list = toObservableList([3, 1]);
       // Dummy listener to record changes.
-      // TODO(jmesserly): should we just record changes always, to support the sync api?
-      sub = list.listChanges.listen((List<ListChangeRecord> records) => null);
+      // TODO(jmesserly): should we just record changes always,
+      //  to support the sync api?
+      sub = list.listChanges.listen((Object records) {});
       list.sort();
       expect(list.deliverListChanges(), true);
       list.sort();
@@ -307,18 +311,19 @@ void main() {
 
     test('clear', () {
       list.clear();
-      expect(list, []);
+      expect(list, <Object>[]);
 
       return Future(() {
         expect(
             propRecords,
             changeMatchers([
               _lengthChange(6, 0),
-              PropertyChangeRecord<bool>(list, #isEmpty, false, true),
-              PropertyChangeRecord<bool>(list, #isNotEmpty, true, false),
+              PropertyChangeRecord<bool, Symbol>(list, #isEmpty, false, true),
+              PropertyChangeRecord<bool, Symbol>(
+                  list, #isNotEmpty, true, false),
             ]));
         expect(listRecords, [
-          _change(0, removed: [1, 2, 3, 1, 3, 4])
+          _change(0, removed: <int>[1, 2, 3, 1, 3, 4])
         ]);
       });
     });
@@ -327,9 +332,9 @@ void main() {
 
 late ObservableList<int?> list;
 
-PropertyChangeRecord<int> _lengthChange(int oldValue, int newValue) =>
-    PropertyChangeRecord<int>(list, #length, oldValue, newValue);
+PropertyChangeRecord<int, Symbol> _lengthChange(int oldValue, int newValue) =>
+    PropertyChangeRecord<int, Symbol>(list, #length, oldValue, newValue);
 
-ListChangeRecord _change(int index,
-        {List removed = const [], int addedCount = 0}) =>
+ListChangeRecord<int?> _change(int index,
+        {List<int> removed = const [], int addedCount = 0}) =>
     ListChangeRecord(list, index, removed: removed, addedCount: addedCount);

@@ -1,4 +1,4 @@
-import 'package:observable/observable.dart';
+import 'package:change_notifier/change_notifier.dart';
 import 'package:test/test.dart';
 
 void main() {

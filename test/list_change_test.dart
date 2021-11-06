@@ -4,10 +4,8 @@
 
 import 'dart:async';
 
-import 'package:observable/observable.dart';
+import 'package:change_notifier/change_notifier.dart';
 import 'package:test/test.dart';
-
-import 'observable_test_utils.dart';
 
 // This file contains code ported from:
 // https://github.com/rafaelw/ChangeSummary/blob/master/tests/test.js
@@ -16,8 +14,8 @@ void main() => listChangeTests();
 
 // TODO(jmesserly): port or write array fuzzer tests
 void listChangeTests() {
-  StreamSubscription? sub;
-  var model;
+  StreamSubscription<Object>? sub;
+  ObservableList<int>? model;
 
   tearDown(() {
     sub?.cancel();
@@ -26,52 +24,59 @@ void listChangeTests() {
 
   ListChangeRecord<E> _delta<E>(int i, List<E> r, int a,
           {ObservableList<E>? typedModel}) =>
-      ListChangeRecord(typedModel ?? model, i, removed: r, addedCount: a);
+      ListChangeRecord((typedModel ?? model!) as List<E>, i,
+          removed: r, addedCount: a);
 
   test('sequential adds', () {
-    final model = ObservableList();
-    model.add(0);
+    final model = ObservableList<int>()..add(0);
 
-    List<ListChangeRecord>? summary;
+    List<ListChangeRecord<Object>>? summary;
     sub = model.listChanges.listen((r) => summary = r);
 
-    model.add(1);
-    model.add(2);
+    model
+      ..add(1)
+      ..add(2);
 
     expect(summary, null);
     return Future(() {
-      expect(summary, [_delta(1, [], 2, typedModel: model)]);
+      expect(summary, [_delta<int>(1, [], 2, typedModel: model)]);
       expect(summary![0].added, [1, 2]);
-      expect(summary![0].removed, []);
+      expect(summary![0].removed, <Object>[]);
     });
   });
 
-  test('List Splice Truncate And Expand With Length', () {
-    final model = ObservableList<String?>.from(['a', 'b', 'c', 'd', 'e']);
+  test('List Splice Truncate And Expand With Length', () async {
+    final model =
+        ObservableList<String?>.from(<String>['a', 'b', 'c', 'd', 'e']);
 
     List<ListChangeRecord<String?>>? summary;
     sub = model.listChanges.listen((r) => summary = r);
 
     model.length = 2;
-    return Future(() {
-      expect(summary, [
-        _delta(2, ['c', 'd', 'e'], 0, typedModel: model)
-      ]);
-      expect(summary![0].added, []);
-      expect(summary![0].removed, ['c', 'd', 'e']);
-      summary = null;
-      model.length = 5;
-    }).then(newMicrotask).then((_) {
-      expect(summary, [_delta(2, [], 3, typedModel: model)]);
-      expect(summary![0].added, [null, null, null]);
-      expect(summary![0].removed, []);
-    });
+
+    await model.listChanges.first;
+
+    expect(summary, [
+      _delta(2, ['c', 'd', 'e'], 0, typedModel: model)
+    ]);
+    expect(summary![0].added, <Object>[]);
+    expect(summary![0].removed, ['c', 'd', 'e']);
+    summary = null;
+    model.length = 5;
+
+    await model.listChanges.first;
+
+    expect(summary, [_delta<String?>(2, [], 3, typedModel: model)]);
+    expect(summary![0].added, [null, null, null]);
+    expect(summary![0].removed, <Object>[]);
   });
 
   group('List deltas can be applied', () {
-    void applyAndCheckDeltas(model, copy, changes) => changes.then((summary) {
+    void applyAndCheckDeltas<E>(ObservableList<E> model, List<E> copy,
+            Future<List<ListChangeRecord<E>>> changes) =>
+        changes.then((summary) {
           // apply deltas to the copy
-          for (ListChangeRecord delta in summary) {
+          for (ListChangeRecord<E> delta in summary) {
             delta.apply(copy);
           }
 
@@ -79,125 +84,140 @@ void listChangeTests() {
         });
 
     test('Contained', () {
-      var model = toObservable(['a', 'b']);
-      var copy = model.toList();
-      var changes = model.listChanges.first;
+      final model = toObservable(['a', 'b']) as ObservableList<String>;
+      final copy = model.toList();
+      final changes = model.listChanges.first;
 
-      model.removeAt(1);
-      model.insertAll(0, ['c', 'd', 'e']);
-      model.removeRange(1, 3);
-      model.insert(1, 'f');
+      model
+        ..removeAt(1)
+        ..insertAll(0, ['c', 'd', 'e'])
+        ..removeRange(1, 3)
+        ..insert(1, 'f');
 
       return applyAndCheckDeltas(model, copy, changes);
     });
 
     test('Delete Empty', () {
-      var model = toObservable(<dynamic>[1]);
-      var copy = model.toList();
-      var changes = model.listChanges.first;
+      final model = toObservable(<Object>[1]) as ObservableList<Object>;
+      final copy = model.toList();
+      final changes = model.listChanges.first;
 
-      model.removeAt(0);
-      model.insertAll(0, ['a', 'b', 'c']);
+      model
+        ..removeAt(0)
+        ..insertAll(0, ['a', 'b', 'c']);
 
       return applyAndCheckDeltas(model, copy, changes);
     });
 
     test('Right Non Overlap', () {
-      var model = toObservable(['a', 'b', 'c', 'd']);
-      var copy = model.toList();
-      var changes = model.listChanges.first;
+      final model =
+          toObservable(['a', 'b', 'c', 'd']) as ObservableList<String>;
+      final copy = model.toList();
+      final changes = model.listChanges.first;
 
-      model.removeRange(0, 1);
-      model.insert(0, 'e');
-      model.removeRange(2, 3);
-      model.insertAll(2, ['f', 'g']);
+      model
+        ..removeRange(0, 1)
+        ..insert(0, 'e')
+        ..removeRange(2, 3)
+        ..insertAll(2, ['f', 'g']);
 
       return applyAndCheckDeltas(model, copy, changes);
     });
 
     test('Left Non Overlap', () {
-      var model = toObservable(['a', 'b', 'c', 'd']);
-      var copy = model.toList();
-      var changes = model.listChanges.first;
+      final model =
+          toObservable(['a', 'b', 'c', 'd']) as ObservableList<String>;
+      final copy = model.toList();
+      final changes = model.listChanges.first;
 
-      model.removeRange(3, 4);
-      model.insertAll(3, ['f', 'g']);
-      model.removeRange(0, 1);
-      model.insert(0, 'e');
+      model
+        ..removeRange(3, 4)
+        ..insertAll(3, ['f', 'g'])
+        ..removeRange(0, 1)
+        ..insert(0, 'e');
 
       return applyAndCheckDeltas(model, copy, changes);
     });
 
     test('Right Adjacent', () {
-      var model = toObservable(['a', 'b', 'c', 'd']);
-      var copy = model.toList();
-      var changes = model.listChanges.first;
+      final model =
+          toObservable(['a', 'b', 'c', 'd']) as ObservableList<String>;
+      final copy = model.toList();
+      final changes = model.listChanges.first;
 
-      model.removeRange(1, 2);
-      model.insert(3, 'e');
-      model.removeRange(2, 3);
-      model.insertAll(0, ['f', 'g']);
+      model
+        ..removeRange(1, 2)
+        ..insert(3, 'e')
+        ..removeRange(2, 3)
+        ..insertAll(0, ['f', 'g']);
 
       return applyAndCheckDeltas(model, copy, changes);
     });
 
     test('Left Adjacent', () {
-      var model = toObservable(['a', 'b', 'c', 'd']);
-      var copy = model.toList();
-      var changes = model.listChanges.first;
+      final model =
+          toObservable(['a', 'b', 'c', 'd']) as ObservableList<String>;
+      final copy = model.toList();
+      final changes = model.listChanges.first;
 
-      model.removeRange(2, 4);
-      model.insert(2, 'e');
-
-      model.removeAt(1);
-      model.insertAll(1, ['f', 'g']);
+      model
+        ..removeRange(2, 4)
+        ..insert(2, 'e')
+        ..removeAt(1)
+        ..insertAll(1, ['f', 'g']);
 
       return applyAndCheckDeltas(model, copy, changes);
     });
 
     test('Right Overlap', () {
-      var model = toObservable(['a', 'b', 'c', 'd']);
-      var copy = model.toList();
-      var changes = model.listChanges.first;
+      final model =
+          toObservable(['a', 'b', 'c', 'd']) as ObservableList<String>;
+      final copy = model.toList();
+      final changes = model.listChanges.first;
 
-      model.removeAt(1);
-      model.insert(1, 'e');
-      model.removeAt(1);
-      model.insertAll(1, ['f', 'g']);
+      model
+        ..removeAt(1)
+        ..insert(1, 'e')
+        ..removeAt(1)
+        ..insertAll(1, ['f', 'g']);
 
       return applyAndCheckDeltas(model, copy, changes);
     });
 
     test('Left Overlap', () {
-      var model = toObservable(['a', 'b', 'c', 'd']);
-      var copy = model.toList();
-      var changes = model.listChanges.first;
+      final model =
+          toObservable(['a', 'b', 'c', 'd']) as ObservableList<String>;
+      final copy = model.toList();
+      final changes = model.listChanges.first;
 
-      model.removeAt(2);
-      model.insertAll(2, ['e', 'f', 'g']);
-      // a b [e f g] d
-      model.removeRange(1, 3);
-      model.insertAll(1, ['h', 'i', 'j']);
+      model
+        ..removeAt(2)
+        ..insertAll(2, ['e', 'f', 'g'])
+        // a b [e f g] d
+        ..removeRange(1, 3)
+        ..insertAll(1, ['h', 'i', 'j']);
       // a [h i j] f g d
 
       return applyAndCheckDeltas(model, copy, changes);
     });
 
     test('Prefix And Suffix One In', () {
-      var model = toObservable(['a', 'b', 'c', 'd']);
-      var copy = model.toList();
-      var changes = model.listChanges.first;
+      final model =
+          toObservable(['a', 'b', 'c', 'd']) as ObservableList<String>;
+      final copy = model.toList();
+      final changes = model.listChanges.first;
 
-      model.insert(0, 'z');
-      model.add('z');
+      model
+        ..insert(0, 'z')
+        ..add('z');
 
       return applyAndCheckDeltas(model, copy, changes);
     });
 
     test('Remove First', () {
-      var model = toObservable([16, 15, 15]);
-      var copy = model.toList();
-      var changes = model.listChanges.first;
+      final model = toObservable([16, 15, 15]) as ObservableList<int>;
+      final copy = model.toList();
+      final changes = model.listChanges.first;
 
       model.removeAt(0);
 
@@ -205,12 +225,14 @@ void listChangeTests() {
     });
 
     test('Update Remove', () {
-      var model = toObservable(['a', 'b', 'c', 'd']);
-      var copy = model.toList();
-      var changes = model.listChanges.first;
+      final model =
+          toObservable(['a', 'b', 'c', 'd']) as ObservableList<String>;
+      final copy = model.toList();
+      final changes = model.listChanges.first;
 
-      model.removeAt(2);
-      model.insertAll(2, ['e', 'f', 'g']); // a b [e f g] d
+      model
+        ..removeAt(2)
+        ..insertAll(2, ['e', 'f', 'g']); // a b [e f g] d
       model[0] = 'h';
       model.removeAt(1);
 
@@ -218,9 +240,10 @@ void listChangeTests() {
     });
 
     test('Remove Mid List', () {
-      var model = toObservable(['a', 'b', 'c', 'd']);
-      var copy = model.toList();
-      var changes = model.listChanges.first;
+      final model =
+          toObservable(['a', 'b', 'c', 'd']) as ObservableList<String>;
+      final copy = model.toList();
+      final changes = model.listChanges.first;
 
       model.removeAt(2);
 
@@ -229,11 +252,12 @@ void listChangeTests() {
   });
 
   group('edit distance', () {
-    void assertEditDistance(
-            orig, Future<List<ListChangeRecord>> changes, expectedDist) =>
+    void assertEditDistance<E>(ObservableList<E> orig,
+            Future<List<ListChangeRecord<E>>> changes, E expectedDist) =>
         changes.then((summary) {
           var actualDistance = 0;
-          for (var delta in summary) {
+
+          for (final delta in summary) {
             actualDistance += delta.addedCount + delta.removed.length;
           }
 
@@ -241,31 +265,35 @@ void listChangeTests() {
         });
 
     test('add items', () {
-      var model = toObservable([]);
-      var changes = model.listChanges.first;
+      final model = toObservable(<int>[]) as ObservableList<int>;
+      final changes = model.listChanges.first;
       model.addAll([1, 2, 3]);
       return assertEditDistance(model, changes, 3);
     });
 
     test('trunacte and add, sharing a contiguous block', () {
-      var model = toObservable(['x', 'x', 'x', 'x', '1', '2', '3']);
-      var changes = model.listChanges.first;
-      model.length = 0;
-      model.addAll(['1', '2', '3', 'y', 'y', 'y', 'y']);
+      final model = toObservable(['x', 'x', 'x', 'x', '1', '2', '3'])
+          as ObservableList<String>;
+      final changes = model.listChanges.first;
+      model
+        ..length = 0
+        ..addAll(['1', '2', '3', 'y', 'y', 'y', 'y']);
       return assertEditDistance(model, changes, 8);
     });
 
     test('truncate and add, sharing a discontiguous block', () {
-      var model = toObservable(['1', '2', '3', '4', '5']);
-      var changes = model.listChanges.first;
-      model.length = 0;
-      model.addAll(['a', '2', 'y', 'y', '4', '5', 'z', 'z']);
+      final model =
+          toObservable(['1', '2', '3', '4', '5']) as ObservableList<String>;
+      final changes = model.listChanges.first;
+      model
+        ..length = 0
+        ..addAll(['a', '2', 'y', 'y', '4', '5', 'z', 'z']);
       return assertEditDistance(model, changes, 7);
     });
 
     test('insert at beginning and end', () {
-      var model = toObservable([2, 3, 4]);
-      var changes = model.listChanges.first;
+      final model = toObservable([2, 3, 4]) as ObservableList<int>;
+      final changes = model.listChanges.first;
       model.insert(0, 5);
       model[2] = 6;
       model.add(7);

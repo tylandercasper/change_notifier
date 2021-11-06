@@ -1,6 +1,9 @@
-## 0.24.0-dev
+## 0.24.0
 
-* Migrate to [null safety](https://dart.dev/null-safety).
+* Migrated to [null safety](https://dart.dev/null-safety).
+* BREAKING CHANGE: Changed ChangeNotifier to AsyncChangeNotifier.
+* BREAKING CHANGE: Removed all deprecated stuff like `Observable` class
+* The class `ChangeNotifier` is now an extraction of Flutter Core `ChangeNotifier`
 
 ## 0.23.0
 
