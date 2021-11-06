@@ -3,19 +3,20 @@
 // BSD-style license that can be found in the LICENSE file.
 
 // ignore_for_file: deprecated_member_use_from_same_package
-library observable.src.observable_list;
+library change_notifier.src.observable_list;
 
 import 'dart:async';
 import 'dart:collection' show ListBase, UnmodifiableListView;
 
 import 'differs.dart';
-import 'observable.dart' show Observable;
+import 'change_notifier.dart';
 import 'records.dart';
 
 /// Represents an observable list of model values. If any items are added,
 /// removed, or replaced, then observers that are listening to [changes]
 /// will be notified.
-class ObservableList<E> extends ListBase<E> with Observable {
+class ObservableList<E> extends ListBase<E>
+    with AsyncChangeNotifier, PropertyChangeNotifier<Symbol> {
   /// Adapts [source] to be a `ObservableList<T>`.
   ///
   /// Any time the list would produce an element that is not a [T],
@@ -42,7 +43,7 @@ class ObservableList<E> extends ListBase<E> with Observable {
 
   /// Creates an observable list with the elements of [other]. The order in
   /// the list will be the order provided by the iterator of [other].
-  ObservableList.from(Iterable other) : _list = List<E>.from(other);
+  ObservableList.from(Iterable<E> other) : _list = List<E>.from(other);
 
   ObservableList._spy(List<E> other) : _list = other;
 
@@ -58,21 +59,6 @@ class ObservableList<E> extends ListBase<E> with Observable {
   /// this list as well.
   @override
   ObservableList<T> cast<T>() => ObservableList.castFrom<E, T>(this);
-
-  /// Returns a view of this list as a list of [T] instances.
-  ///
-  /// If this list contains only instances of [T], all read operations
-  /// will work correctly. If any operation tries to access an element
-  /// that is not an instance of [T], the access will throw instead.
-  ///
-  /// Elements added to the list (e.g., by using [add] or [addAll])
-  /// must be instance of [T] to be valid arguments to the adding function,
-  /// and they must be instances of [E] as well to be accepted by
-  /// this list as well.
-  @deprecated
-  @override
-  // ignore: override_on_non_overriding_method
-  ObservableList<T> retype<T>() => cast<T>();
 
   /// The stream of summarized list changes, delivered asynchronously.
   ///
@@ -166,14 +152,14 @@ class ObservableList<E> extends ListBase<E> with Observable {
   }
 
   @override
-  void add(E value) {
+  void add(E element) {
     var len = _list.length;
     _notifyChangeLength(len, len + 1);
     if (hasListObservers) {
       _notifyListChange(len, addedCount: 1);
     }
 
-    _list.add(value);
+    _list.add(element);
   }
 
   @override
@@ -336,8 +322,8 @@ class ObservableList<E> extends ListBase<E> with Observable {
 
   /// Updates the [previous] list using the [changeRecords]. For added items,
   /// the [current] list is used to find the current value.
-  static void applyChangeRecords(List<Object> previous, List<Object> current,
-      List<ListChangeRecord> changeRecords) {
+  static void applyChangeRecords<E>(List<Object> previous, List<Object> current,
+      List<ListChangeRecord<E>> changeRecords) {
     if (identical(previous, current)) {
       throw ArgumentError("can't use same list for previous and current");
     }

@@ -2,7 +2,7 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-library observable.src.differs;
+library change_notifier.src.differs;
 
 import 'dart:math' as math;
 
@@ -34,7 +34,7 @@ class EqualityDiffer<E> implements Differ<E> {
   @override
   List<ChangeRecord> diff(E oldValue, E newValue) {
     return _equality.equals(oldValue, newValue)
-        ? ChangeRecord.NONE
-        : ChangeRecord.ANY;
+        ? ChangeRecord.none
+        : ChangeRecord.any;
   }
 }

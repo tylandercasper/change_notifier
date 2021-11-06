@@ -2,7 +2,7 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-library observable.src.records;
+library change_notifier.src.records;
 
 import 'package:collection/collection.dart';
 import 'package:quiver/core.dart';
@@ -19,10 +19,10 @@ class ChangeRecord {
   ///
   /// May be used to produce lower-GC-pressure records where more verbose change
   /// records will not be used directly.
-  static const ANY = ChangeRecords<ChangeRecord>.any();
+  static const any = ChangeRecords<ChangeRecord>.any();
 
   /// Signifies no changes occurred.
-  static const NONE = ChangeRecords<ChangeRecord>.none();
+  static const none = ChangeRecords<ChangeRecord>.none();
 
   const ChangeRecord();
 }

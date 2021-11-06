@@ -2,7 +2,7 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-library observable.src.to_observable;
+library change_notifier.src.to_observable;
 
 import 'dart:collection';
 
@@ -43,9 +43,8 @@ dynamic toObservable(dynamic value, {bool deep = true}) =>
 /// this function. Changing the original collection will not affect it.
 ObservableList<T> toObservableList<T>(Iterable<T> value, {bool deep = true}) {
   if (value is ObservableList<T>) return value;
-  return deep
-      ? _toObservableDeepIterable(value) as ObservableList<T>
-      : _toObservableShallow(value);
+  return (deep ? _toObservableDeepIterable(value) : _toObservableShallow(value))
+      as ObservableList<T>;
 }
 
 /// Converts the [Map] to an [ObservableMap].
@@ -61,9 +60,8 @@ ObservableList<T> toObservableList<T>(Iterable<T> value, {bool deep = true}) {
 /// this function. Changing the original collection will not affect it.
 ObservableMap<K, V> toObservableMap<K, V>(Map<K, V> value, {bool deep = true}) {
   if (value is ObservableMap<K, V>) return value;
-  return deep
-      ? _toObservableDeepMap(value) as ObservableMap<K, V>
-      : _toObservableShallow(value);
+  return (deep ? _toObservableDeepMap(value) : _toObservableShallow(value))
+      as ObservableMap<K, V>;
 }
 
 dynamic _toObservableShallow(dynamic value) {
@@ -92,21 +90,26 @@ dynamic _toObservableDeep(dynamic value) {
   return value;
 }
 
-ObservableMap _toObservableDeepMap(Map<dynamic, dynamic> value) {
+ObservableMap<dynamic, dynamic> _toObservableDeepMap(
+    Map<dynamic, dynamic> value) {
   return extractMapTypeArguments(value, <K, V>() {
-    var result = ObservableMap<K, V>.createFromType(value.cast<K, V>());
-    value.forEach((k, v) {
-      result[_toObservableDeep(k)] = _toObservableDeep(v);
-    });
+    final result = ObservableMap<K, V>.createFromType(value.cast<K, V>());
+
+    for (final k in value.keys) {
+      final dynamic v = value[k];
+
+      result[_toObservableDeep(k) as K] = _toObservableDeep(v) as V;
+    }
+
     return result;
   }) as ObservableMap<dynamic, dynamic>;
 }
 
-ObservableList _toObservableDeepIterable(Iterable<dynamic> value) {
+ObservableList<dynamic> _toObservableDeepIterable(Iterable<dynamic> value) {
   return extractIterableTypeArgument(value, <T>() {
     var result = ObservableList<T>();
     for (var element in value) {
-      result.add(_toObservableDeep(element));
+      result.add(_toObservableDeep(element) as T);
     }
     return result;
   }) as ObservableList<dynamic>;

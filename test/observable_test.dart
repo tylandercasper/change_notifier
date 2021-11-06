@@ -4,7 +4,7 @@
 
 import 'dart:async';
 
-import 'package:observable/observable.dart';
+import 'package:change_notifier/change_notifier.dart';
 import 'package:test/test.dart';
 
 import 'observable_test_utils.dart';
@@ -13,7 +13,7 @@ void main() => observableTests();
 
 void observableTests() {
   // Track the subscriptions so we can clean them up in tearDown.
-  late List subs;
+  late List<StreamSubscription<Object>> subs;
 
   setUp(() {
     subs = [];
@@ -55,8 +55,9 @@ void observableTests() {
       expectPropertyChanges(records, 2);
     })));
 
-    t.value = 41;
-    t.value = 42;
+    t
+      ..value = 41
+      ..value = 42;
     expect(called, 0);
   });
 
@@ -79,33 +80,36 @@ void observableTests() {
   test('multiple observers', () {
     var t = createModel(123);
 
-    void verifyRecords(records) {
+    void verifyRecords(List<ChangeRecord> records) {
       expectPropertyChanges(records, 2);
     }
 
-    subs.add(t.changes.listen(expectAsync1(verifyRecords)));
-    subs.add(t.changes.listen(expectAsync1(verifyRecords)));
+    subs
+      ..add(t.changes.listen(expectAsync1(verifyRecords)))
+      ..add(t.changes.listen(expectAsync1(verifyRecords)));
 
-    t.value = 41;
-    t.value = 42;
+    t
+      ..value = 41
+      ..value = 42;
   });
 
   test('async processing model', () {
     var t = createModel(123);
-    var records = [];
+    var records = <ChangeRecord>[];
     subs.add(t.changes.listen((r) {
       records.addAll(r);
     }));
-    t.value = 41;
-    t.value = 42;
-    expect(records, [], reason: 'changes delived async');
+    t
+      ..value = 41
+      ..value = 42;
+    expect(records, <Object>[], reason: 'changes delived async');
 
     return Future(() {
       expectPropertyChanges(records, 2);
       records.clear();
 
       t.value = 777;
-      expect(records, [], reason: 'changes delived async');
+      expect(records, <Object>[], reason: 'changes delived async');
     }).then(newMicrotask).then((_) {
       expectPropertyChanges(records, 1);
     });
@@ -113,7 +117,7 @@ void observableTests() {
 
   test('cancel listening', () {
     var t = createModel(123);
-    late var sub;
+    late StreamSubscription<Object> sub;
     sub = t.changes.listen(expectAsync1((records) {
       expectPropertyChanges(records, 1);
       sub.cancel();
@@ -124,7 +128,7 @@ void observableTests() {
 
   test('cancel and reobserve', () {
     var t = createModel(123);
-    late var sub;
+    late StreamSubscription<Object> sub;
     sub = t.changes.listen(expectAsync1((records) {
       expectPropertyChanges(records, 1);
       sub.cancel();
@@ -141,7 +145,7 @@ void observableTests() {
 
   test('cannot modify changes list', () {
     var t = createModel(123);
-    late var records;
+    late List<ChangeRecord> records;
     subs.add(t.changes.listen((r) {
       records = r;
     }));
@@ -168,7 +172,7 @@ void observableTests() {
 
   test('notifyChange', () {
     var t = createModel(123);
-    var records = [];
+    var records = <ChangeRecord>[];
     subs.add(t.changes.listen((r) {
       records.addAll(r);
     }));
@@ -182,7 +186,7 @@ void observableTests() {
 
   test('notifyPropertyChange', () {
     var t = createModel(123);
-    late var records;
+    late List<ChangeRecord> records;
     subs.add(t.changes.listen((r) {
       records = r;
     }));
@@ -196,7 +200,7 @@ void observableTests() {
   });
 }
 
-void expectPropertyChanges(records, int number) {
+void expectPropertyChanges(List<ChangeRecord> records, int number) {
   expect(records.length, number, reason: 'expected $number change records');
   for (var record in records) {
     expect(record is PropertyChangeRecord, true,
@@ -206,9 +210,10 @@ void expectPropertyChanges(records, int number) {
   }
 }
 
-ObservableSubclass createModel(int number) => ObservableSubclass(number);
+ObservableSubclass<int> createModel(int number) => ObservableSubclass(number);
 
-class ObservableSubclass<T> extends PropertyChangeNotifier {
+class ObservableSubclass<T>
+    with AsyncChangeNotifier, PropertyChangeNotifier<Symbol> {
   ObservableSubclass([T? initialValue]) : _value = initialValue;
 
   T? get value => _value;

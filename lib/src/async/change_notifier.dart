@@ -11,8 +11,8 @@ import 'records.dart';
 /// May use [notifyChange] to queue a change record; they are asynchronously
 /// delivered at the end of the VM turn.
 ///
-/// [ChangeNotifier] may be extended, mixed in, or used as a delegate.
-class ChangeNotifier<C extends ChangeRecord> implements Observable<C> {
+/// [AsyncChangeNotifier] may be extended, mixed in, or used as a delegate.
+class AsyncChangeNotifier<C extends ChangeRecord> implements Observable<C> {
   StreamController<List<C>>? _changes;
 
   bool _scheduled = false;
@@ -87,17 +87,6 @@ class ChangeNotifier<C extends ChangeRecord> implements Observable<C> {
       _scheduled = true;
     }
   }
-
-  @Deprecated('Exists to make migrations off Observable easier')
-  @override
-  @protected
-  T notifyPropertyChange<T>(
-    Symbol field,
-    T oldValue,
-    T newValue,
-  ) {
-    throw UnsupportedError('Not supported by ChangeNotifier');
-  }
 }
 
 /// Supplies property `changes` and various hooks to implement [Observable].
@@ -108,16 +97,15 @@ class ChangeNotifier<C extends ChangeRecord> implements Observable<C> {
 /// [PropertyChangeNotifier] may be extended or used as a delegate. To use as
 /// a mixin, instead use with [PropertyChangeMixin]:
 ///     with ChangeNotifier<PropertyChangeRecord>, PropertyChangeMixin
-class PropertyChangeNotifier extends ChangeNotifier {
-  @override
+mixin PropertyChangeNotifier<K> implements AsyncChangeNotifier {
   T notifyPropertyChange<T>(
-    Symbol field,
+    K field,
     T oldValue,
     T newValue,
   ) {
     if (hasObservers && oldValue != newValue) {
       notifyChange(
-        PropertyChangeRecord<T>(
+        PropertyChangeRecord<T, K>(
           this,
           field,
           oldValue,

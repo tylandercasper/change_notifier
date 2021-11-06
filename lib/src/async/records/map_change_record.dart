@@ -2,7 +2,7 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-part of observable.src.records;
+part of change_notifier.src.records;
 
 /// A [ChangeRecord] that denotes adding, removing, or updating a map.
 class MapChangeRecord<K, V> implements ChangeRecord {
@@ -52,20 +52,20 @@ class MapChangeRecord<K, V> implements ChangeRecord {
   }
 
   @override
-  bool operator ==(Object o) {
-    if (o is MapChangeRecord<K, V>) {
-      return key == o.key &&
-          oldValue == o.oldValue &&
-          newValue == o.newValue &&
-          isInsert == o.isInsert &&
-          isRemove == o.isRemove;
+  bool operator ==(Object other) {
+    if (other is MapChangeRecord<K, V>) {
+      return key == other.key &&
+          oldValue == other.oldValue &&
+          newValue == other.newValue &&
+          isInsert == other.isInsert &&
+          isRemove == other.isRemove;
     }
     return false;
   }
 
   @override
   int get hashCode {
-    return hashObjects([
+    return hashObjects(<dynamic>[
       key,
       oldValue,
       newValue,

@@ -2,7 +2,7 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-part of observable.src.records;
+part of change_notifier.src.records;
 
 /// A [ChangeRecord] that denotes adding or removing nodes at [index].
 ///
@@ -104,19 +104,20 @@ class ListChangeRecord<E> implements ChangeRecord {
   }
 
   @override
-  bool operator ==(Object o) {
-    if (o is ListChangeRecord<E>) {
-      return identical(object, o.object) &&
-          index == o.index &&
-          addedCount == o.addedCount &&
-          const ListEquality().equals(removed, o.removed);
+  bool operator ==(Object other) {
+    if (other is ListChangeRecord<E>) {
+      return identical(object, other.object) &&
+          index == other.index &&
+          addedCount == other.addedCount &&
+          const ListEquality<dynamic>().equals(removed, other.removed);
     }
     return false;
   }
 
   @override
   int get hashCode {
-    return hash4(object, index, addedCount, const ListEquality().hash(removed));
+    return hash4(
+        object, index, addedCount, const ListEquality<dynamic>().hash(removed));
   }
 
   @override

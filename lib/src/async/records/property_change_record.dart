@@ -2,15 +2,15 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-part of observable.src.records;
+part of change_notifier.src.records;
 
 /// A change record to a field of a generic observable object.
-class PropertyChangeRecord<T> implements ChangeRecord {
+class PropertyChangeRecord<T, K> implements ChangeRecord {
   /// Object that changed.
   final Object object;
 
-  /// Name of the property that changed.
-  final Symbol name;
+  /// Identifier of the property that changed.
+  final K name;
 
   /// Previous value of the property.
   final T oldValue;
@@ -26,12 +26,12 @@ class PropertyChangeRecord<T> implements ChangeRecord {
   );
 
   @override
-  bool operator ==(Object o) =>
-      o is PropertyChangeRecord<T> &&
-      identical(object, o.object) &&
-      name == o.name &&
-      oldValue == o.oldValue &&
-      newValue == o.newValue;
+  bool operator ==(Object other) =>
+      other is PropertyChangeRecord<T, K> &&
+      identical(object, other.object) &&
+      name == other.name &&
+      oldValue == other.oldValue &&
+      newValue == other.newValue;
 
   @override
   int get hashCode => hash4(object, name, oldValue, newValue);

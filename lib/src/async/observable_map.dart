@@ -3,11 +3,11 @@
 // BSD-style license that can be found in the LICENSE file.
 
 // ignore_for_file: deprecated_member_use_from_same_package
-library observable.src.observable_map;
+library change_notifier.src.observable_map;
 
 import 'dart:collection';
 
-import 'observable.dart';
+import 'change_notifier.dart';
 import 'records.dart';
 import 'to_observable.dart';
 
@@ -20,7 +20,9 @@ import 'to_observable.dart';
 /// Represents an observable map of model values. If any items are added,
 /// removed, or replaced, then observers that are listening to [changes]
 /// will be notified.
-class ObservableMap<K, V> extends Observable implements Map<K, V> {
+class ObservableMap<K, V>
+    with AsyncChangeNotifier<ChangeRecord>, PropertyChangeNotifier<Symbol>
+    implements Map<K, V> {
   /// Adapts [source] to be a `ObservableMap<K2, V2>`.
   ///
   /// Any time the map would produce a key or value that is not a [K2] or [V2]
@@ -178,13 +180,6 @@ class ObservableMap<K, V> extends Observable implements Map<K, V> {
     return ObservableMap.castFrom<K, V, K2, V2>(this);
   }
 
-  @deprecated
-  @override
-  // ignore: override_on_non_overriding_method
-  ObservableMap<K2, V2> retype<K2, V2>() {
-    return ObservableMap.castFrom<K, V, K2, V2>(this);
-  }
-
   @override
   Iterable<MapEntry<K, V>> get entries => _map.entries;
 
@@ -213,11 +208,13 @@ class ObservableMap<K, V> extends Observable implements Map<K, V> {
   // Note: we don't really have a reasonable old/new value to use here.
   // But this should fix "keys" and "values" in templates with minimal overhead.
   void _notifyKeysValuesChanged() {
-    notifyChange(PropertyChangeRecord(this, #keys, null, null));
+    notifyChange(
+        PropertyChangeRecord<Object?, Symbol>(this, #keys, null, null));
     _notifyValuesChanged();
   }
 
   void _notifyValuesChanged() {
-    notifyChange(PropertyChangeRecord(this, #values, null, null));
+    notifyChange(
+        PropertyChangeRecord<Object?, Symbol>(this, #values, null, null));
   }
 }

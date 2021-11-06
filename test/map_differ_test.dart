@@ -1,4 +1,4 @@
-import 'package:observable/observable.dart';
+import 'package:change_notifier/change_notifier.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -7,17 +7,17 @@ void main() {
 
     test('should emit no changes for identical maps', () {
       final map = Map<String, String>.fromIterable(
-        Iterable.generate(10, (i) => '$i'),
+        Iterable<String>.generate(10, (i) => '$i'),
       );
       expect(diff(map, map), isEmpty);
     });
 
     test('should emit no changes for maps with identical content', () {
       final map1 = Map<String, String>.fromIterable(
-        Iterable.generate(10, (i) => '$i'),
+        Iterable<String>.generate(10, (i) => '$i'),
       );
       final map2 = Map<String, String>.fromIterable(
-        Iterable.generate(10, (i) => '$i'),
+        Iterable<String>.generate(10, (i) => '$i'),
       );
       expect(diff(map1, map2), isEmpty);
     });
