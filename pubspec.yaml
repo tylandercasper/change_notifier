@@ -3,7 +3,7 @@ version: 0.25.0
 description: Support for marking objects as observable
 homepage: https://github.com/angulardart-community/change_notifier
 environment:
-  sdk: '>=3.1.0 <=4.0.0'
+  sdk: '>=3.1.0 <4.0.0'
 
 dependencies:
   collection: ^1.15.0
