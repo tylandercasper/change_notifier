@@ -1,6 +1,7 @@
 library change_notifier.async;
 
-export 'change_notifier.dart' show AsyncChangeNotifier, PropertyChangeNotifier;
+export 'change_notifier.dart' show AsyncChangeNotifier, PropertyChangeNotifier,
+ListenableIterable, ChangeStreamNotifier;
 export 'differs.dart' show Differ, EqualityDiffer, ListDiffer, MapDiffer;
 export 'observable.dart';
 export 'observable_list.dart';
@@ -12,4 +13,3 @@ export 'records.dart'
         ListChangeRecord,
         MapChangeRecord,
         PropertyChangeRecord;
-export 'to_observable.dart';

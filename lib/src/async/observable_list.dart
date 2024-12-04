@@ -29,7 +29,7 @@ class ObservableList<E> extends ListBase<E>
   /// and if all elements stored into the returned list are actually instance
   /// of [S], then the returned list can be used as a `ObservableList<T>`.
   static ObservableList<T> castFrom<S, T>(ObservableList<S> source) =>
-      ObservableList<T>._spy(source._list.cast<T>());
+      ObservableList<T>.spy(source._list.cast<T>());
 
   List<ListChangeRecord<E>>? _listRecords;
 
@@ -45,7 +45,7 @@ class ObservableList<E> extends ListBase<E>
   /// the list will be the order provided by the iterator of [other].
   ObservableList.from(Iterable<E> other) : _list = List<E>.from(other);
 
-  ObservableList._spy(List<E> other) : _list = other;
+  ObservableList.spy(List<E> other) : _list = other;
 
   /// Returns a view of this list as a list of [T] instances.
   ///
@@ -230,8 +230,8 @@ class ObservableList<E> extends ListBase<E>
     // We are modifying the length just below these checks. Without the checks
     // Array.copy could throw an exception, leaving the list in a bad state
     // (with a length that has been increased, but without a new element).
-    if (index is! int) throw ArgumentError(index);
     RangeError.checkValidIndex(index, this);
+    
     _list
       // Increase the length by adding [element], in case [E] isn't nullable.
       ..add(element)

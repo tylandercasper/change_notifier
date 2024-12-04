@@ -1,3 +1,7 @@
+## 0.25.0
+* Bumped dependencies and SDK
+* Made spy in ObservableList public
+
 ## 0.24.0
 
 * Migrated to [null safety](https://dart.dev/null-safety).

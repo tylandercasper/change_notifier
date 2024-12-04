@@ -45,7 +45,7 @@ typedef VoidCallback = void Function();
 ///  * [InheritedNotifier], an abstract superclass for widgets that use a
 ///    [Listenable]'s notifications to trigger rebuilds in descendant widgets
 ///    that declare a dependency on them, using the [InheritedWidget] mechanism.
-///  * [new Listenable.merge], which creates a [Listenable] that triggers
+///  * [Listenable.merge], which creates a [Listenable] that triggers
 ///    notifications whenever any of a list of other [Listenable]s trigger their
 ///    notifications.
 abstract class Listenable {

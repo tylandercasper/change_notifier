@@ -9,7 +9,6 @@ import 'dart:collection';
 
 import 'change_notifier.dart';
 import 'records.dart';
-import 'to_observable.dart';
 
 // TODO(jmesserly): this needs to be faster. We currently require multiple
 // lookups per key to get the old value.

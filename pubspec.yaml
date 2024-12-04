@@ -1,13 +1,12 @@
 name: change_notifier
-version: 0.24.0
+version: 0.25.0
 description: Support for marking objects as observable
 homepage: https://github.com/angulardart-community/change_notifier
 environment:
-  sdk: '>=2.12.0 <=3.0.0'
+  sdk: '>=3.1.0 <=4.0.0'
 
 dependencies:
   collection: ^1.15.0
-  dart_internal: ^0.2.2
   meta: ^1.7.0
   quiver: ^3.0.1+1
 

@@ -6,13 +6,35 @@ import 'internal.dart';
 import 'observable.dart';
 import 'records.dart';
 
+abstract class ChangeStreamNotifier {
+  StreamController? _changes;
+  Stream get changes {
+    final ctrl = _changes ??= StreamController.broadcast(onCancel: () {
+      final cur = _changes;
+
+      _changes = null;
+      cur!.close();
+    });
+
+    return ctrl.stream;
+  }
+
+  @protected
+  void changed() {
+    _changes?.add(null);
+  }
+}
+
+abstract class ListenableIterable<T>
+    implements Iterable<T>, ChangeStreamNotifier {}
+
 /// Supplies [changes] and various hooks to implement [Observable].
 ///
 /// May use [notifyChange] to queue a change record; they are asynchronously
 /// delivered at the end of the VM turn.
 ///
 /// [AsyncChangeNotifier] may be extended, mixed in, or used as a delegate.
-class AsyncChangeNotifier<C extends ChangeRecord> implements Observable<C> {
+mixin AsyncChangeNotifier<C extends ChangeRecord> implements Observable<C> {
   StreamController<List<C>>? _changes;
 
   bool _scheduled = false;
@@ -97,7 +119,7 @@ class AsyncChangeNotifier<C extends ChangeRecord> implements Observable<C> {
 /// [PropertyChangeNotifier] may be extended or used as a delegate. To use as
 /// a mixin, instead use with [PropertyChangeMixin]:
 ///     with ChangeNotifier<PropertyChangeRecord>, PropertyChangeMixin
-mixin PropertyChangeNotifier<K> implements AsyncChangeNotifier {
+mixin PropertyChangeNotifier<K extends Object> implements AsyncChangeNotifier {
   T notifyPropertyChange<T>(
     K field,
     T oldValue,
