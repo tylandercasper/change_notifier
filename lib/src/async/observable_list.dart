@@ -29,7 +29,8 @@ class ObservableList<E> extends ListBase<E>
   /// and if all elements stored into the returned list are actually instance
   /// of [S], then the returned list can be used as a `ObservableList<T>`.
   static ObservableList<T> castFrom<S, T>(ObservableList<S> source) =>
-      ObservableList<T>.spy(source._list.cast<T>());
+      ObservableList<T>.spy(source._list.cast<T>(),
+          notifyWhenEqual: source.notifyWhenEqual);
 
   List<ListChangeRecord<E>>? _listRecords;
 
@@ -38,14 +39,19 @@ class ObservableList<E> extends ListBase<E>
   /// The inner [List<E>] with the actual storage.
   final List<E> _list;
 
+  /// Whether to notify when an index is set to the same value.
+  final bool notifyWhenEqual;
+
   /// Creates an empty observable list.
-  ObservableList() : _list = <E>[];
+  ObservableList({this.notifyWhenEqual = false}) : _list = <E>[];
 
   /// Creates an observable list with the elements of [other]. The order in
   /// the list will be the order provided by the iterator of [other].
-  ObservableList.from(Iterable<E> other) : _list = List<E>.from(other);
+  ObservableList.from(Iterable<E> other, {this.notifyWhenEqual = false})
+      : _list = List<E>.from(other);
 
-  ObservableList.spy(List<E> other) : _list = other;
+  ObservableList.spy(List<E> other, {this.notifyWhenEqual = false})
+      : _list = other;
 
   /// Returns a view of this list as a list of [T] instances.
   ///
@@ -119,7 +125,7 @@ class ObservableList<E> extends ListBase<E>
   @override
   void operator []=(int index, E value) {
     var oldValue = _list[index];
-    if (hasListObservers && oldValue != value) {
+    if (hasListObservers && (notifyWhenEqual || oldValue != value)) {
       _notifyListChange(index, addedCount: 1, removed: [oldValue]);
     }
     _list[index] = value;
