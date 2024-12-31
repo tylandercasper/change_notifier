@@ -1,5 +1,8 @@
+## 0.27.0
+* added notifyWhenEqual flag to ObservableMap
+
 ## 0.26.0
-* added notifyWhenEqual flag
+* added notifyWhenEqual flag to ObservableList
 
 ## 0.25.0
 * Bumped dependencies and SDK
