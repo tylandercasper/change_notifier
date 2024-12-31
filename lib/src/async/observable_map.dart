@@ -37,19 +37,24 @@ class ObservableMap<K, V>
   static ObservableMap<K2, V2> castFrom<K, V, K2, V2>(
     ObservableMap<K, V> source,
   ) {
-    return ObservableMap<K2, V2>.spy(source._map.cast<K2, V2>());
+    return ObservableMap<K2, V2>.spy(source._map.cast<K2, V2>(),
+        notifyWhenEqual: source.notifyWhenEqual);
   }
 
   final Map<K, V> _map;
 
+  /// Whether to notify when an index is set to the same value.
+  final bool notifyWhenEqual;
+
   /// Creates an observable map.
-  ObservableMap() : _map = HashMap<K, V>();
+  ObservableMap({this.notifyWhenEqual = false}) : _map = HashMap<K, V>();
 
   /// Creates a new observable map using a [LinkedHashMap].
-  ObservableMap.linked() : _map = <K, V>{};
+  ObservableMap.linked({this.notifyWhenEqual = false}) : _map = <K, V>{};
 
   /// Creates a new observable map using a [SplayTreeMap].
-  ObservableMap.sorted() : _map = SplayTreeMap<K, V>();
+  ObservableMap.sorted({this.notifyWhenEqual = false})
+      : _map = SplayTreeMap<K, V>();
 
   /// Creates an observable map that contains all key value pairs of [other].
   /// It will attempt to use the same backing map type if the other map is a
@@ -58,25 +63,29 @@ class ObservableMap<K, V>
   ///
   /// Note this will perform a shallow conversion. If you want a deep conversion
   /// you should use [toObservable].
-  factory ObservableMap.from(Map<K, V> other) {
-    return ObservableMap<K, V>.createFromType(other)..addAll(other);
+  factory ObservableMap.from(Map<K, V> other, {bool notifyWhenEqual = false}) {
+    return ObservableMap<K, V>.createFromType(other,
+        notifyWhenEqual: notifyWhenEqual)
+      ..addAll(other);
   }
 
   /// Like [ObservableMap.from], but creates an empty map.
-  factory ObservableMap.createFromType(Map<K, V> other) {
+  factory ObservableMap.createFromType(Map<K, V> other,
+      {bool notifyWhenEqual = false}) {
     ObservableMap<K, V> result;
     if (other is SplayTreeMap) {
-      result = ObservableMap<K, V>.sorted();
+      result = ObservableMap<K, V>.sorted(notifyWhenEqual: notifyWhenEqual);
     } else if (other is LinkedHashMap) {
-      result = ObservableMap<K, V>.linked();
+      result = ObservableMap<K, V>.linked(notifyWhenEqual: notifyWhenEqual);
     } else {
-      result = ObservableMap<K, V>();
+      result = ObservableMap<K, V>(notifyWhenEqual: notifyWhenEqual);
     }
     return result;
   }
 
   /// Creates a new observable map wrapping [other].
-  ObservableMap.spy(Map<K, V> other) : _map = other;
+  ObservableMap.spy(Map<K, V> other, {this.notifyWhenEqual = false})
+      : _map = other;
 
   @override
   Iterable<K> get keys => _map.keys;
@@ -118,7 +127,7 @@ class ObservableMap<K, V>
       notifyPropertyChange(#length, len, _map.length);
       notifyChange(MapChangeRecord<K, V>.insert(key, value));
       _notifyKeysValuesChanged();
-    } else if (oldValue != value) {
+    } else if (notifyWhenEqual || oldValue != value) {
       notifyChange(MapChangeRecord<K, V>(key, oldValue, value));
       _notifyValuesChanged();
     }
