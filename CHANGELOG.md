@@ -1,3 +1,6 @@
+## 0.26.0
+* added notifyWhenEqual flag
+
 ## 0.25.0
 * Bumped dependencies and SDK
 * Made spy in ObservableList public
