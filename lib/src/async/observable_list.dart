@@ -298,12 +298,8 @@ class ObservableList<E> extends ListBase<E>
   bool deliverListChanges() {
     if (_listRecords == null) return false;
     //projectListSplices removes equal entries so skip the call when requested
-    final records = notifyWhenEqual
-        ? _listRecords!
-        : projectListSplices<E>(
-            this,
-            _listRecords!,
-          );
+    final records = projectListSplices<E>(this, _listRecords!,
+        notifyWhenEqual: notifyWhenEqual);
     _listRecords = null;
 
     if (hasListObservers && records.isNotEmpty) {
