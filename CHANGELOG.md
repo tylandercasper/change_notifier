@@ -1,5 +1,5 @@
 ## 0.28.0
-* skip projectListSplices when notifyWhenEqual is set
+* add notifyWhenEqual to projectListSplices so equal changes aren't filtered out
 
 ## 0.27.0
 * added notifyWhenEqual flag to ObservableMap
